@@ -1,0 +1,152 @@
+<?php
+/**
+ * GAC - Vista Parcial de Tabla de Cuentas de Email
+ * Para actualización AJAX
+ */
+$filter = $filter ?? '';
+$email_view_key = !empty($filter) ? 'listar_' . $filter : 'listar_correos';
+$can_edit = function_exists('user_can_action') && user_can_action($email_view_key, 'editar');
+$can_delete = function_exists('user_can_action') && user_can_action($email_view_key, 'eliminar');
+?>
+
+<div class="table-container">
+    <table class="admin-table" id="emailAccountsTable">
+        <thead>
+            <tr>
+                <th class="checkbox-column" style="display: none; width: 40px;">
+                    <input type="checkbox" id="selectAll" title="Seleccionar todos">
+                </th>
+                <th class="text-center" style="width: 60px;">ID</th>
+                <th class="text-center" style="width: 25%;">Correo</th>
+                <th class="text-center" style="width: 15%;">Usuario (acceso)</th>
+                <th class="text-center" style="width: 20%;">Plataforma</th>
+                <th class="text-center" style="width: 18%;">Actividad</th>
+                <th class="text-center" style="width: 12%;">Administrador</th>
+                <th class="text-center" style="width: 150px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <?php if (empty($email_accounts)): ?>
+                <tr>
+                    <td colspan="8" class="text-center">
+                        <p class="empty-message">No hay registros de acceso. Usa "Asignar usuario" o "Registro masivo" para agregar.</p>
+                    </td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($email_accounts as $account): ?>
+                    <?php
+                    // Datos desde user_access: email, password (usuario), platform_display_name
+                    $usuario = $account['password'] ?? '';
+                    $plataforma = $account['platform_display_name'] ?? $account['platform_name'] ?? '—';
+                    $actividad = !empty($account['updated_at']) ? date('d/m/Y H:i', strtotime($account['updated_at'])) : (!empty($account['created_at']) ? date('d/m/Y H:i', strtotime($account['created_at'])) : '—');
+                    ?>
+                    <tr data-id="<?= (int)$account['id'] ?>" class="table-row">
+                        <td class="checkbox-column" style="display: none;">
+                            <input type="checkbox" class="row-checkbox" value="<?= (int)$account['id'] ?>">
+                        </td>
+                        <td class="text-center"><?= (int)$account['id'] ?></td>
+                        <td class="email-cell text-center"><?= htmlspecialchars($account['email'] ?? '') ?></td>
+                        <td class="user-cell text-center"><?= htmlspecialchars($usuario) ?></td>
+                        <td class="platform-cell text-center">
+                            <span class="platform-badge"><?= htmlspecialchars($plataforma) ?></span>
+                        </td>
+                        <td class="text-center"><span class="sync-time"><?= $actividad ?></span></td>
+                        <td class="administrador-cell text-center"><?= htmlspecialchars($account['updated_by_username'] ?? '—') ?></td>
+                        <td class="actions-cell text-center">
+                            <?php if ($can_edit): ?>
+                            <a href="/admin/user-access/actualizar?id=<?= (int)($account['id'] ?? 0) ?>" 
+                               class="btn-icon btn-edit" 
+                               title="Editar acceso">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z">                                </path>
+                            </svg>
+                        </a>
+                            <?php endif; ?>
+                            <?php if ($can_delete): ?>
+                            <button class="btn-icon btn-delete"
+                                    data-id="<?= (int)$account['id'] ?>"
+                                    title="Eliminar">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">                                </path>
+                            </svg>
+                            </button>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
+
+<?php
+$total_records = (int)($total_records ?? 0);
+$total_pages = (int)($total_pages ?? 1);
+$current_page = (int)($current_page ?? 1);
+$per_page = (int)($per_page ?? 15);
+$from = $total_records === 0 ? 0 : (($current_page - 1) * $per_page) + 1;
+$to = min($current_page * $per_page, $total_records);
+?>
+<div class="pagination-container">
+    <div class="pagination-info">
+        Mostrando 
+        <strong><?= $from ?></strong> 
+        - 
+        <strong><?= $to ?></strong> 
+        de 
+        <strong><?= number_format($total_records) ?></strong> 
+        registros
+    </div>
+    <?php if ($total_pages > 1): ?>
+    <div class="pagination-controls">
+        <button class="pagination-btn" 
+                data-page="<?= $current_page - 1 ?>" 
+                <?= $current_page <= 1 ? 'disabled' : '' ?>>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Anterior
+        </button>
+        
+        <div class="pagination-pages">
+            <?php
+            $startPage = max(1, $current_page - 2);
+            $endPage = min($total_pages, $current_page + 2);
+            
+            if ($startPage > 1): ?>
+                <button class="pagination-page" data-page="1">1</button>
+                <?php if ($startPage > 2): ?>
+                    <span class="pagination-ellipsis">...</span>
+                <?php endif; ?>
+            <?php endif; ?>
+            
+            <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                <button class="pagination-page <?= $i === $current_page ? 'active' : '' ?>" 
+                        data-page="<?= $i ?>">
+                    <?= $i ?>
+                </button>
+            <?php endfor; ?>
+            
+            <?php if ($endPage < $total_pages): ?>
+                <?php if ($endPage < $total_pages - 1): ?>
+                    <span class="pagination-ellipsis">...</span>
+                <?php endif; ?>
+                <button class="pagination-page" data-page="<?= $total_pages ?>">
+                    <?= $total_pages ?>
+                </button>
+            <?php endif; ?>
+        </div>
+        
+        <button class="pagination-btn" 
+                data-page="<?= $current_page + 1 ?>" 
+                <?= $current_page >= $total_pages ? 'disabled' : '' ?>>
+            Siguiente
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </button>
+    </div>
+    <?php endif; ?>
+</div>

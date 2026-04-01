@@ -1,0 +1,61 @@
+name: 🚀 Deploy Simple (FTP/cPanel)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: 📦 Deploy via FTP
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: pdo, pdo_mysql, mbstring, openssl, json
+      
+      - name: 📦 Install Composer dependencies
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction
+      
+      - name: 📤 Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          exclude: |
+            **/.git*
+            **/.env
+            **/.env.example
+            **/node_modules/**
+            **/logs/*
+            **/*.log
+            **/.github/**
+            **/*.md
+            **/README.md
+            **/INSTALLATION.md
+            **/ARCHITECTURE.md
+            **/CRITERIOS_DESARROLLO.md
+            **/PARAMETROS_DEFINIDOS.md
+            **/ESTRUCTURA_CARPETAS.md
+            **/INICIO_RAPIDO.md
+            **/EJECUTAR.md
+            **/COMANDOS_EJECUTAR.txt
+            **/SOLUCION_ERROR.md
+            **/.gitignore
+            **/.gitattributes
+      
+      - name: ✅ Deployment successful
+        run: |
+          echo "🚀 Deployment completed successfully!"

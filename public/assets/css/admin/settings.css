@@ -1,0 +1,565 @@
+/**
+ * GAC - Estilos para Vista de ConfiguraciÃ³n
+ */
+
+/* ============================================
+   CONTENEDOR DE CONFIGURACIÃ“N
+   ============================================ */
+   .settings-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ============================================
+   SECCIÃ“N DE CONFIGURACIÃ“N
+   ============================================ */
+.settings-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.settings-section-header {
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-section-header--with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.settings-section-header--with-action .settings-section-description {
+    margin-bottom: 0;
+}
+
+.settings-section-header--with-action .btn {
+    flex-shrink: 0;
+}
+
+.settings-section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.settings-section-title svg {
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.settings-section-description {
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ============================================
+   FORMULARIO DE CONFIGURACIÓN
+   ============================================ */
+.settings-form {
+    margin-top: var(--spacing-lg);
+}
+
+.settings-form .form-group {
+    margin-bottom: var(--spacing-xl);
+}
+
+.settings-form .form-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+}
+
+.settings-form .form-icon {
+    flex-shrink: 0;
+    color: var(--color-primary);
+}
+
+.settings-form .form-select {
+    width: 100%;
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    transition: all var(--transition-base);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--spacing-md) center;
+    background-size: 12px;
+    padding-right: calc(var(--spacing-md) * 2 + 12px);
+    cursor: pointer;
+}
+
+.settings-form .form-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 59, 130, 246), 0.1);
+}
+
+.settings-form .form-select:hover {
+    border-color: var(--color-primary-light);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.settings-form .form-help {
+    display: block;
+    margin-top: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.settings-form .form-error {
+    display: none;
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: #ef4444;
+}
+
+.settings-form .form-group.has-error .form-error {
+    display: block;
+}
+
+.settings-form .form-group.has-error .form-select {
+    border-color: #ef4444;
+}
+
+.settings-form .required {
+    color: #ef4444;
+    margin-left: 4px;
+}
+
+/* ============================================
+   ACCIONES DEL FORMULARIO
+   ============================================ */
+.settings-form .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid var(--border-color);
+}
+
+/* ============================================
+   BOTONES
+   ============================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: none;
+    font-family: var(--font-family);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: var(--text-on-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-color: var(--color-primary);
+}
+
+.btn.loading .btn-text {
+    display: none;
+}
+
+.btn.loading .btn-loader {
+    display: block !important;
+}
+
+.btn-loader {
+    display: none;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   CUENTA GMAIL MATRIZ (bloque visible)
+   ============================================ */
+.gmail-matrix-card {
+    padding: 1.25rem 1.5rem;
+}
+
+.gmail-matrix-label {
+    margin: 0 0 0.35rem 0;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.gmail-matrix-email {
+    margin: 0 0 1rem 0;
+    padding: 0.5rem 0.75rem;
+    background: #e5e7eb;
+    color: #1f2937;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: ui-monospace, monospace;
+    font-weight: 500;
+    border: 1px solid #d1d5db;
+    display: inline-block;
+    min-height: 1.5em;
+}
+
+.gmail-matrix-empty {
+    margin: 0 0 1rem 0;
+    color: var(--text-muted);
+    font-size: var(--font-size-base);
+}
+
+/* ============================================
+   PERSONALIZACIÃ“N DE ROLES
+   ============================================ */
+.roles-panel {
+    margin-top: var(--spacing-md);
+}
+
+.roles-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.role-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.role-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.btn-icon.btn-edit-role {
+    background: transparent;
+    border: none;
+    color: var(--color-primary);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon.btn-edit-role:hover {
+    background: rgba(0, 102, 255, 0.15);
+    color: var(--color-primary-light);
+}
+
+.roles-empty {
+    color: var(--text-muted);
+    padding: var(--spacing-md);
+    margin: 0;
+}
+
+/* Modal editor de vistas por rol */
+.role-views-modal .modal-container {
+    max-width: 95vw;
+    width: 1300px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.role-views-modal-body {
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+}
+
+.role-views-editor {
+    display: grid;
+    grid-template-columns: minmax(800px, 1fr) 300px;
+    gap: 0;
+    min-height: 600px;
+    height: 80vh;
+}
+
+.role-preview-frame-wrap {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.role-preview-label {
+    margin: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.role-preview-frame {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    border: none;
+    background: var(--bg-card);
+}
+
+.role-views-checkboxes-panel {
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    background: var(--bg-card);
+}
+
+.role-views-panel-title {
+    margin: 0 0 var(--spacing-xs);
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+}
+
+.role-views-panel-desc {
+    margin: 0 0 var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.role-views-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.role-view-item {
+    margin-bottom: var(--spacing-sm);
+}
+
+.role-view-parent {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.role-view-parent input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-primary);
+}
+
+.role-view-expand-icon {
+    margin-left: auto;
+    font-size: 10px;
+    opacity: 0.8;
+    transition: transform 0.2s;
+}
+
+.role-view-item.expanded .role-view-expand-icon {
+    transform: rotate(180deg);
+}
+
+.role-view-actions-submenu {
+    display: none;
+    margin-top: var(--spacing-xs);
+    margin-left: 28px;
+    padding-left: var(--spacing-sm);
+    border-left: 2px solid var(--border-color);
+}
+
+.role-view-item.expanded .role-view-actions-submenu,
+.role-view-item.expanded-by-check .role-view-actions-submenu {
+    display: block;
+}
+
+.role-view-action-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 400;
+    margin-bottom: var(--spacing-xs);
+}
+
+.role-view-action-label:last-child {
+    margin-bottom: 0;
+}
+
+.role-view-action-label input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+}
+
+.role-views-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: auto;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.role-views-actions .btn {
+    flex: 1;
+}
+
+@media (max-width: 900px) {
+    .role-views-editor {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 280px;
+    }
+
+    .role-preview-frame-wrap {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .settings-section {
+        padding: var(--spacing-lg);
+    }
+
+    .settings-section-title {
+        font-size: var(--font-size-lg);
+    }
+
+    .settings-form .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .settings-form .form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Toggle activar/deshabilitar (rojo = deshabilitado, verde = habilitado) */
+.admin-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
+}
+.admin-toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.admin-toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #dc3545;
+    border-radius: 24px;
+    transition: background-color 0.25s ease;
+}
+.admin-toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 0.25s ease;
+}
+.admin-toggle-input:checked + .admin-toggle-slider {
+    background-color: #28a745;
+}
+.admin-toggle-input:checked + .admin-toggle-slider::before {
+    transform: translateX(20px);
+}
+.admin-toggle-input:disabled + .admin-toggle-slider {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Tabla Administradores: cabeceras y celdas centradas */
+#administratorsTable th,
+#administratorsTable td.text-center {
+    text-align: center;
+}
+#administratorsTable td.actions-cell {
+    text-align: center;
+}

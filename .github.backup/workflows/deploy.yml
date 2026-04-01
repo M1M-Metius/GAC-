@@ -1,0 +1,84 @@
+name: 🚀 Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: 📦 Deploy to Production
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: pdo, pdo_mysql, mbstring, openssl, json
+      
+      - name: 📦 Install Composer dependencies
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction
+      
+      - name: 🔐 Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.CPANEL_SSH_KEY }}
+      
+      - name: 📤 Deploy to cPanel via SSH
+        run: |
+          # Configurar SSH
+          mkdir -p ~/.ssh
+          echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.CPANEL_HOST }} >> ~/.ssh/known_hosts
+          
+          # Crear archivo .env en el servidor si no existe
+          ssh ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }} "
+            cd ${{ secrets.CPANEL_DEPLOY_PATH }} &&
+            if [ ! -f .env ]; then
+              echo 'APP_NAME=GAC' > .env
+              echo 'APP_ENV=production' >> .env
+              echo 'APP_DEBUG=false' >> .env
+            fi
+          "
+          
+          # Sincronizar archivos (excluyendo archivos sensibles)
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.env' \
+            --exclude='.env.example' \
+            --exclude='node_modules' \
+            --exclude='vendor' \
+            --exclude='logs/*' \
+            --exclude='*.log' \
+            --exclude='.github' \
+            --exclude='README.md' \
+            --exclude='*.md' \
+            -e ssh \
+            ./ ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:${{ secrets.CPANEL_DEPLOY_PATH }}/
+          
+          # Instalar dependencias en el servidor
+          ssh ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }} "
+            cd ${{ secrets.CPANEL_DEPLOY_PATH }} &&
+            composer install --no-dev --optimize-autoloader --no-interaction
+          "
+          
+          # Establecer permisos
+          ssh ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }} "
+            cd ${{ secrets.CPANEL_DEPLOY_PATH }} &&
+            chmod -R 755 public &&
+            chmod -R 755 storage 2>/dev/null || true &&
+            chmod -R 755 logs 2>/dev/null || true
+          "
+      
+      - name: ✅ Deployment successful
+        run: |
+          echo "🚀 Deployment completed successfully!"
+          echo "🌐 Your application should be live at: ${{ secrets.CPANEL_URL }}"

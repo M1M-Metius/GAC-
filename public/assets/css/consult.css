@@ -1,0 +1,847 @@
+/**
+ * GAC - Estilos de Consulta de Códigos
+ * Vista principal de consulta
+ */
+
+/* ============================================
+   CONTAINER PRINCIPAL
+   ============================================ */
+   .consult-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: calc(100vh - 120px);
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    padding-top: var(--spacing-2xl, 2.5rem);
+    margin-top: 0;
+}
+
+.consult-wrapper {
+    width: 100%;
+    max-width: 600px;
+    animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   LOGO SECTION (circular + espacio para que el card no solape)
+   ============================================ */
+.logo-section {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    margin-top: 0;
+    padding-bottom: var(--spacing-lg);
+}
+
+.consult-logo-wrap {
+    display: inline-block;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: transparent;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    animation: pulse 3s ease-in-out infinite;
+    margin-top: -50px;
+    margin-bottom: -27px;
+}
+
+.consult-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+}
+
+/* Descripción del propósito de la app (visible para verificación Google) */
+.consult-app-purpose {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+    max-width: 520px;
+    margin: 0 auto var(--spacing-md);
+    padding: 0 var(--spacing-sm);
+}
+
+/* ============================================
+   CARD PRINCIPAL
+   ============================================ */
+.consult-card {
+    background: rgba(26, 35, 50, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-xl), var(--shadow-glow);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-base);
+    margin-top: var(--spacing-lg);
+}
+
+.consult-card:hover {
+    box-shadow: var(--shadow-xl), 0 0 30px rgba(0, 102, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.hogar-note {
+    background: rgba(255, 193, 7, 0.12);
+    border: 1px solid rgba(255, 193, 7, 0.35);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    font-size: var(--font-size-sm);
+    color: #facc15;
+    line-height: 1.5;
+}
+
+.card-title {
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+    background: linear-gradient(135deg, #ffffff 0%, #b8c5d6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.card-subtitle {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    margin-top: var(--spacing-xs);
+}
+
+/* ============================================
+   FORMULARIO
+   ============================================ */
+.consult-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-sm) * 0.5);
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-icon {
+    color: var(--color-primary-light);
+    flex-shrink: 0;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    transition: all var(--transition-base);
+    outline: none;
+}
+
+.form-input:focus,
+.form-select:focus {
+    border-color: var(--color-primary);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.form-input::placeholder {
+    color: var(--text-muted);
+}
+
+.form-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23b8c5d6' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--spacing-md) center;
+    padding-right: calc(var(--spacing-md) * 3);
+}
+
+.form-select option:disabled {
+    color: var(--text-muted);
+}
+
+.form-select:invalid:not(:focus) {
+    color: var(--text-muted);
+}
+
+.form-select:valid,
+.form-select:focus {
+    color: var(--text-primary);
+}
+
+.form-error {
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+    min-height: 20px;
+    display: block;
+}
+
+/* ============================================
+   BOTONES
+   ============================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-xl);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: var(--text-primary);
+    box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+    box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--color-primary);
+}
+
+.btn-submit {
+    width: 100%;
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: var(--font-size-lg);
+}
+
+.btn-loader {
+    display: none;
+    animation: spin 1s linear infinite;
+}
+
+.btn-loader.active {
+    display: inline-block;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.btn-copy {
+    margin-top: var(--spacing-md);
+}
+
+.btn-copy.hidden {
+    display: none;
+}
+
+/* ============================================
+   RESULT SECTION
+   ============================================ */
+.result-section {
+    margin-top: var(--spacing-md);
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.result-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-xl);
+    text-align: center;
+    border: 2px solid var(--border-color);
+    transition: all var(--transition-base);
+}
+
+.result-card.success {
+    border-color: var(--color-success);
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.result-card.error {
+    border-color: var(--color-danger);
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.result-card.info {
+    border-color: #6c757d;
+    background: rgba(108, 117, 125, 0.1);
+}
+
+.result-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--spacing-lg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-3xl);
+}
+
+.result-card.success .result-icon {
+    background: rgba(40, 167, 69, 0.2);
+    color: var(--color-success);
+}
+
+.result-card.error .result-icon {
+    background: rgba(220, 53, 69, 0.2);
+    color: var(--color-danger);
+}
+
+.result-card.info .result-icon {
+    background: rgba(108, 117, 125, 0.2);
+    color: #6c757d;
+}
+
+.result-title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+}
+
+.result-message {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.6;
+}
+
+.result-code {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    color: var(--color-primary-light);
+    background: rgba(0, 0, 0, 0.3);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    margin: var(--spacing-lg) 0;
+    letter-spacing: 2px;
+    word-break: break-all;
+    border: 1px solid rgba(0, 102, 255, 0.3);
+}
+
+.result-code.hidden {
+    display: none;
+}
+
+/* ============================================
+   INFO SECTION
+   ============================================ */
+.info-section {
+    margin-top: var(--spacing-lg);
+    text-align: center;
+}
+
+.info-text {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--border-radius-sm);
+}
+
+.info-text svg {
+    flex-shrink: 0;
+}
+
+/* Enlaces legales en página principal (Política de privacidad, Condiciones) */
+.consult-legal-links {
+    margin-top: var(--spacing-lg);
+    text-align: center;
+    font-size: var(--font-size-sm);
+}
+.consult-legal-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+}
+.consult-legal-links a:hover {
+    color: var(--color-primary-light);
+    text-decoration: underline;
+}
+.consult-legal-sep {
+    margin: 0 var(--spacing-sm);
+    color: var(--text-muted);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .consult-container {
+        padding: var(--spacing-md);
+    }
+    
+    .consult-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .card-title {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .card-subtitle {
+        font-size: var(--font-size-sm);
+    }
+    
+    .result-code {
+        font-size: var(--font-size-xl);
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .consult-logo-wrap {
+        width: 170px;
+        height: 170px;
+    }
+    
+    .consult-container {
+        min-height: calc(100vh - 100px);
+        padding: var(--spacing-xs) var(--spacing-sm) var(--spacing-sm);
+    }
+    
+    .consult-card {
+        padding: var(--spacing-md);
+    }
+    
+    .card-title {
+        font-size: var(--font-size-xl);
+    }
+    
+    .form-input,
+    .form-select {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .btn-submit {
+        padding: var(--spacing-md) var(--spacing-xl);
+        font-size: calc(var(--font-size-base) * 1.25);
+    }
+}
+
+/* ============================================
+   ANIMACIONES ADICIONALES
+   ============================================ */
+.form-input:invalid:not(:placeholder-shown),
+.form-select:invalid:not(:placeholder-shown) {
+    border-color: var(--color-danger);
+}
+
+.form-input:valid:not(:placeholder-shown),
+.form-select:valid:not(:placeholder-shown) {
+    border-color: var(--color-success);
+}
+
+/* Efecto de carga */
+.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Estilos para el select cuando tiene valor seleccionado */
+.form-select:not([value=""]) {
+    color: var(--text-primary);
+}
+
+.form-select option:not(:disabled) {
+    color: var(--text-primary);
+    background: var(--bg-card);
+}
+
+/* ============================================
+   BOTÓN VER EMAIL Y ACCIONES
+   ============================================ */
+.result-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn-view-email {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: transparent;
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.btn-view-email:hover {
+    background: var(--color-primary);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+}
+
+/* ============================================
+   MODAL DE EMAIL COMPLETO
+   ============================================ */
+.email-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+    animation: fadeIn 0.3s ease;
+}
+
+.email-modal.hidden {
+    display: none;
+}
+
+.email-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+}
+
+.email-modal-container {
+    position: relative;
+    width: 100%;
+    max-width: 95%;
+    max-height: 90vh;
+    background: var(--bg-card);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+}
+
+@media (min-width: 1200px) {
+    .email-modal-container {
+        max-width: 1200px;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.email-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.email-modal-title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.email-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.email-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+.email-modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-lg);
+}
+
+.email-info {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.email-info-row {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    align-items: flex-start;
+}
+
+.email-info-row:last-child {
+    margin-bottom: 0;
+}
+
+.email-info-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 80px;
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.email-info-value {
+    color: var(--text-primary);
+    flex: 1;
+    word-break: break-word;
+}
+
+.email-body-container {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    max-height: 500px;
+    overflow-y: auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.email-body {
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-size: var(--font-size-base);
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* Centrar contenido HTML del email */
+.email-body > * {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Para tablas y otros elementos del email */
+.email-body table {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+}
+
+/* Centrar divs y contenedores del email */
+.email-body > div {
+    margin: 0 auto;
+    text-align: left;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Asegurar que todos los elementos del email ocupen el ancho completo */
+.email-body * {
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+
+.email-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius-sm);
+    margin: var(--spacing-sm) 0;
+}
+
+.email-body a {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.email-body a:hover {
+    color: var(--color-primary-light);
+}
+
+.email-body pre {
+    background: rgba(0, 0, 0, 0.3);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+}
+
+.email-body code {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+/* Scrollbar personalizado para el modal */
+.email-modal-content::-webkit-scrollbar,
+.email-body-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.email-modal-content::-webkit-scrollbar-track,
+.email-body-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.email-modal-content::-webkit-scrollbar-thumb,
+.email-body-container::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 4px;
+}
+
+.email-modal-content::-webkit-scrollbar-thumb:hover,
+.email-body-container::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-light);
+}
+
+/* Responsive para modal */
+@media (max-width: 768px) {
+    .email-modal {
+        padding: var(--spacing-sm);
+    }
+    
+    .email-modal-container {
+        max-height: 95vh;
+    }
+    
+    .email-modal-header {
+        padding: var(--spacing-md);
+    }
+    
+    .email-modal-content {
+        padding: var(--spacing-md);
+    }
+    
+    .email-info-row {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+    
+    .email-info-label {
+        min-width: auto;
+    }
+    
+    .result-actions {
+        flex-direction: column;
+    }
+    
+    .btn-view-email,
+    .btn-copy {
+        width: 100%;
+        justify-content: center;
+    }
+}

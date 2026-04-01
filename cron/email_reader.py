@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+"""
+GAC - Lector de correos SOLO IMAP (cuenta maestra @pocoyoni)
+Cron independiente: solo lee la cuenta maestra IMAP y guarda en codes con origin='imap'.
+Para Gmail usar el script separado: email_reader_gmail.py
+"""
+
+import sys
+import os
+import logging
+from datetime import datetime
+
+# Agregar directorio padre al path para que encuentre el módulo cron
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(script_dir)
+sys.path.insert(0, parent_dir)
+
+# Cambiar al directorio del script para que los imports funcionen
+os.chdir(script_dir)
+
+from cron.config import CRON_CONFIG, LOG_CONFIG
+from cron.database import Database
+from cron.repositories import EmailAccountRepository, PlatformRepository, CodeRepository
+from cron.imap_service import ImapService
+from cron.email_filter import EmailFilterService
+
+# Configurar logging
+logging.basicConfig(
+    level=getattr(logging, LOG_CONFIG['level'].upper(), logging.INFO),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_CONFIG['file']),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+
+def _backfill_email_bodies(emails, limit=500):
+    """
+    Actualizar email_body de códigos ya guardados que lo tengan vacío.
+    Usa la misma lista de emails ya leída por el cron (un solo cron hace todo).
+    """
+    if not emails:
+        return 0
+    updated = 0
+    try:
+        db = Database.get_connection()
+        cursor = db.cursor()
+        # Limitar para no sobrecargar en cada ejecución
+        to_process = emails[:limit] if len(emails) > limit else emails
+        for email_data in to_process:
+            subject = email_data.get('subject', '')
+            email_from = email_data.get('from', '')
+            recipient = (email_data.get('to_primary', '') or '').strip().lower()
+            if not recipient and email_data.get('to'):
+                recipient = (email_data['to'][0] or '').strip().lower()
+            body = email_data.get('body_html') or email_data.get('body_text') or email_data.get('body') or ''
+            if not body or not subject:
+                continue
+            try:
+                cursor.execute("""
+                    SELECT id FROM codes
+                    WHERE subject = %s AND email_from = %s AND recipient_email = %s
+                      AND (email_body IS NULL OR email_body = '')
+                    LIMIT 1
+                """, (subject, email_from, recipient))
+                row = cursor.fetchone()
+                if row:
+                    code_id = row['id'] if isinstance(row, dict) else row[0]
+                    cursor.execute("UPDATE codes SET email_body = %s WHERE id = %s", (body, code_id))
+                    db.commit()
+                    updated += 1
+                    logger.info(f"  - ✓ Cuerpo actualizado para código ID {code_id}")
+            except Exception as e:
+                logger.debug(f"  - Backfill skip: {e}")
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
+        cursor.close()
+    except Exception as e:
+        logger.warning(f"Backfill de cuerpos: {e}")
+    return updated
+
+
+def main():
+    """Función principal. Solo IMAP (cuenta maestra @pocoyoni). Para Gmail usar email_reader_gmail.py."""
+    logger.info("=" * 60)
+    logger.info("GAC - Lector IMAP únicamente (email_reader.py)")
+    logger.info("=" * 60)
+    
+    if not CRON_CONFIG['enabled']:
+        logger.warning("Cron jobs deshabilitados en configuración")
+        return
+    
+    try:
+        imap_service = ImapService()
+        filter_service = EmailFilterService()
+        accounts = EmailAccountRepository.find_by_type('imap')
+        
+        master_account = None
+        for account in accounts:
+            try:
+                import json
+                config = json.loads(account.get('provider_config', '{}'))
+                if config.get('is_master', False):
+                    master_account = account
+                    break
+            except:
+                continue
+        
+        # Si no hay cuenta maestra, usar la primera cuenta o buscar streaming@pocoyoni.com
+        if not master_account:
+            for account in accounts:
+                if account['email'] == 'streaming@pocoyoni.com':
+                    master_account = account
+                    break
+        
+        total_codes_saved = 0
+        
+        if not master_account:
+            logger.info("No se encontró cuenta maestra IMAP.")
+            return
+        
+        logger.info(f"Procesando cuenta maestra: {master_account['email']}")
+        account = master_account
+        if account:
+            account_id = account['id']
+            account_email = account['email']
+            logger.info(f"Procesando cuenta IMAP: {account_email} (ID: {account_id})")
+        else:
+            account_id = None
+            account_email = None
+        
+        if account:
+            try:
+                # Leer emails
+                emails = imap_service.read_account(account)
+                logger.info(f"  - Emails leídos: {len(emails)}")
+                for i, e in enumerate(emails[:20]):
+                    logger.info(f"  - Recibido[{i}]: asunto=%r → destinatario=%s", (e.get('subject') or '')[:70], e.get('to_primary') or (e.get('to') or [None])[0] or '')
+                if len(emails) > 20:
+                    logger.info(f"  - ... y {len(emails) - 20} más")
+                if not emails:
+                    EmailAccountRepository.update_sync_status(account_id, 'success')
+                else:
+                    # Filtrar por asunto o por DE (plataforma: Disney+, Netflix, etc.)
+                    filtered_emails = filter_service.filter_by_subject(emails)
+                    logger.info(f"  - Emails filtrados (asuntos en BD): {len(filtered_emails)}")
+                    if not filtered_emails and emails:
+                        subs = list(set((e.get('subject') or '')[:60] for e in emails))
+                        logger.info(f"  - Ningún asunto coincide con email_subjects. Asuntos en buzón: %s", subs[:10])
+                    if not filtered_emails:
+                        EmailAccountRepository.update_sync_status(account_id, 'success')
+                    else:
+                        # Guardar cada correo: DE → code, destinatario → recipient_email, fecha → received_at, HTML → email_body
+                        records_saved = 0
+                        for email_data in filtered_emails:
+                            platform = email_data.get('matched_platform')
+                            if not platform:
+                                logger.info(f"  - Saltado (sin plataforma): asunto=%s", (email_data.get('subject') or '')[:50])
+                                continue
+                            platform_obj = PlatformRepository.find_by_name(platform)
+                            if not platform_obj:
+                                logger.warning(f"  - Plataforma '{platform}' no encontrada, saltando asunto=%s", (email_data.get('subject') or '')[:50])
+                                continue
+                            if not platform_obj['enabled']:
+                                logger.info(f"  - Saltado (plataforma %s deshabilitada): asunto=%s", platform, (email_data.get('subject') or '')[:50])
+                                continue
+                            email_from = email_data.get('from', '') or ''
+                            recipient_email = (email_data.get('to_primary', '') or (email_data.get('to', [None])[0] or '')).strip().lower()
+                            if not recipient_email:
+                                logger.warning(f"  - Email sin destinatario, saltando (asunto: {email_data.get('subject', '')[:40]})")
+                                continue
+                            received_at = email_data.get('date', '')
+                            subject = email_data.get('subject', '')
+                            email_body = email_data.get('body_html') or email_data.get('body_text') or email_data.get('body') or ''
+                            if CodeRepository.email_record_exists(account_id, email_from, recipient_email, subject, received_at):
+                                if email_body and CodeRepository.update_email_body_by_email(
+                                    account_id, email_from, recipient_email, subject, received_at, email_body
+                                ):
+                                    logger.info(f"  - ✓ Cuerpo actualizado para email ya registrado ({recipient_email})")
+                                else:
+                                    logger.info(f"  - Ya existía en BD (no se guarda de nuevo): asunto=%s → %s", subject[:50], recipient_email)
+                                continue
+                            save_data = {
+                                'email_account_id': account_id,
+                                'platform_id': platform_obj['id'],
+                                'code': email_from,
+                                'email_from': email_from,
+                                'subject': subject,
+                                'email_body': email_body,
+                                'received_at': received_at,
+                                'origin': 'imap',
+                                'recipient_email': recipient_email,
+                            }
+                            code_id = CodeRepository.save(save_data)
+                            if code_id:
+                                records_saved += 1
+                                logger.info(f"  - ✓ Correo guardado: DE={email_from[:40]} → {recipient_email}")
+                            else:
+                                logger.error(f"  - ✗ Error al guardar correo para {recipient_email}")
+                        
+                        total_codes_saved += records_saved
+                        logger.info(f"  - Correos guardados en esta cuenta: {records_saved}")
+                        
+                        # Un solo cron: rellenar cuerpos de códigos antiguos que tengan email_body vacío
+                        backfill_count = _backfill_email_bodies(emails, limit=300)
+                        if backfill_count:
+                            logger.info(f"  - Cuerpos de email actualizados (backfill): {backfill_count}")
+                    
+                    # Actualizar estado de sincronización
+                    EmailAccountRepository.update_sync_status(account_id, 'success')
+            
+            except Exception as e:
+                error_msg = str(e)
+                logger.error(f"  - ✗ Error al procesar cuenta {account_email}: {error_msg}")
+                EmailAccountRepository.update_sync_status(account_id, 'error', error_msg)
+        
+        logger.info("=" * 60)
+        logger.info(f"Proceso completado. Total de correos guardados: {total_codes_saved}")
+        logger.info("=" * 60)
+        
+    except Exception as e:
+        logger.error(f"Error fatal en proceso de lectura: {e}", exc_info=True)
+        sys.exit(1)
+    finally:
+        # Cerrar conexiones
+        Database.close_connections()
+
+
+if __name__ == '__main__':
+    main()

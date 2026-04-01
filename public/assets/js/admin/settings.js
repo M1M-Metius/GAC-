@@ -1,0 +1,595 @@
+/**
+ * GAC - JavaScript para Vista de Configuración
+ */
+
+(function() {
+    'use strict';
+
+    // Elementos del DOM
+    const settingsForm = document.getElementById('settingsForm');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const sessionTimeoutSelect = document.getElementById('session_timeout_hours');
+
+    /**
+     * Inicialización
+     */
+    function init() {
+        if (settingsForm) {
+            settingsForm.addEventListener('submit', handleFormSubmit);
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', handleCancel);
+        }
+
+        const btnStartReaderLoop = document.getElementById('btnStartReaderLoop');
+        if (btnStartReaderLoop) {
+            updateReaderLoopStatus();
+            btnStartReaderLoop.addEventListener('click', handleStartReaderLoop);
+        }
+
+        initRoleViewsEditor();
+        initAddRoleModal();
+        initGmailMatrixConfirm();
+    }
+
+    /**
+     * Al hacer clic en "Cambiar cuenta Gmail matriz" mostrar modal de confirmación
+     */
+    function initGmailMatrixConfirm() {
+        const btn = document.getElementById('gmailMatrixChangeBtn');
+        const modal = document.getElementById('gmailMatrixConfirmModal');
+        const closeBtn = document.getElementById('closeGmailMatrixConfirmModal');
+        const cancelBtn = document.getElementById('gmailMatrixConfirmCancel');
+        const continueBtn = document.getElementById('gmailMatrixConfirmContinue');
+        const overlay = modal && modal.querySelector('.modal-overlay');
+
+        if (!btn || !modal) return;
+
+        btn.addEventListener('click', function(e) {
+            if (btn.getAttribute('data-confirm-change') === '1') {
+                e.preventDefault();
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        if (continueBtn) {
+            continueBtn.addEventListener('click', function() {
+                closeModal();
+                window.location.href = btn.href;
+            });
+        }
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (overlay) overlay.addEventListener('click', closeModal);
+    }
+
+    /**
+     * Modal agregar rol
+     */
+    function initAddRoleModal() {
+        const modal = document.getElementById('addRoleModal');
+        const btnAdd = document.getElementById('btnAddRole');
+        const form = document.getElementById('addRoleForm');
+        const closeBtn = document.getElementById('closeAddRoleModal');
+        const cancelBtn = document.getElementById('cancelAddRoleBtn');
+
+        function openModal() {
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                if (form) {
+                    form.reset();
+                    const err = document.getElementById('addRoleDisplayNameError');
+                    if (err) { err.textContent = ''; err.style.display = 'none'; }
+                }
+                const input = document.getElementById('addRoleDisplayName');
+                if (input) input.focus();
+            }
+        }
+
+        function closeModal() {
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function setFormLoading(loading) {
+            const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+            if (!submitBtn) return;
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoader = submitBtn.querySelector('.btn-loader');
+            if (loading) {
+                submitBtn.disabled = true;
+                if (btnText) btnText.style.display = 'none';
+                if (btnLoader) btnLoader.style.display = 'inline-block';
+            } else {
+                submitBtn.disabled = false;
+                if (btnText) btnText.style.display = 'inline';
+                if (btnLoader) btnLoader.style.display = 'none';
+            }
+        }
+
+        if (btnAdd) btnAdd.addEventListener('click', openModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) closeModal();
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const displayName = (document.getElementById('addRoleDisplayName')?.value || '').trim();
+                const errEl = document.getElementById('addRoleDisplayNameError');
+                if (!displayName) {
+                    if (errEl) {
+                        errEl.textContent = 'El nombre del rol es obligatorio';
+                        errEl.style.display = 'block';
+                    }
+                    return;
+                }
+                if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+
+                setFormLoading(true);
+                const fd = new FormData(form);
+
+                fetch('/admin/settings/role-create', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: fd
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            if (typeof window.GAC !== 'undefined' && window.GAC.success) {
+                                window.GAC.success(data.message || 'Rol creado correctamente', 'Rol creado');
+                            } else {
+                                alert(data.message || 'Rol creado correctamente');
+                            }
+                            closeModal();
+                            window.location.reload();
+                        } else {
+                            if (errEl) {
+                                errEl.textContent = data.message || 'Error al crear el rol';
+                                errEl.style.display = 'block';
+                            } else if (typeof window.GAC !== 'undefined' && window.GAC.error) {
+                                window.GAC.error(data.message || 'Error al crear el rol', 'Error');
+                            } else {
+                                alert(data.message || 'Error al crear el rol');
+                            }
+                        }
+                    })
+                    .catch(function () {
+                        if (typeof window.GAC !== 'undefined' && window.GAC.error) {
+                            window.GAC.error('Error de conexión.', 'Error');
+                        } else {
+                            alert('Error de conexión.');
+                        }
+                    })
+                    .finally(function () {
+                        setFormLoading(false);
+                    });
+            });
+        }
+    }
+
+    /**
+     * Personalización de roles: modal con vista demo + checkboxes + submenús de acciones
+     */
+    function initRoleViewsEditor() {
+        const modal = document.getElementById('roleViewsModal');
+        const frame = document.getElementById('rolePreviewFrame');
+        const checkboxesContainer = document.getElementById('roleViewsCheckboxes');
+        const modalTitle = document.getElementById('roleViewsModalTitle');
+        const closeBtn = document.getElementById('closeRoleViewsModal');
+        const cancelBtn = document.getElementById('cancelRoleViewsBtn');
+        const saveBtn = document.getElementById('saveRoleViewsBtn');
+        let currentRoleId = null;
+
+        function getCheckedViewKeys() {
+            if (!checkboxesContainer) return [];
+            const inputs = checkboxesContainer.querySelectorAll('.role-view-checkbox:checked');
+            return Array.from(inputs).map(function (el) { return el.value; });
+        }
+
+        function getCheckedViewActions() {
+            if (!checkboxesContainer) return {};
+            const result = {};
+            checkboxesContainer.querySelectorAll('.role-view-action-checkbox:checked').forEach(function (cb) {
+                const viewKey = cb.dataset.viewKey;
+                const action = cb.dataset.action;
+                if (!viewKey || !action) return;
+                if (!result[viewKey]) result[viewKey] = [];
+                result[viewKey].push(action);
+            });
+            return result;
+        }
+
+        function updatePreviewUrl() {
+            if (!frame) return;
+            const keys = getCheckedViewKeys();
+            const q = keys.length ? 'views=' + encodeURIComponent(keys.join(',')) : 'views=';
+            frame.src = '/admin/role-preview?' + q;
+        }
+
+        function syncExpandState() {
+            if (!checkboxesContainer) return;
+            checkboxesContainer.querySelectorAll('.role-view-item').forEach(function (item) {
+                const cb = item.querySelector('.role-view-checkbox');
+                if (cb && cb.checked) {
+                    item.classList.add('expanded-by-check');
+                } else {
+                    item.classList.remove('expanded-by-check');
+                }
+            });
+        }
+
+        function openModal(roleId, roleName) {
+            currentRoleId = roleId;
+            if (modalTitle) modalTitle.textContent = 'Vista que verá el rol: ' + (roleName || '');
+            if (modal) modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            fetch('/admin/settings/role-views?role_id=' + encodeURIComponent(roleId), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (!checkboxesContainer) return;
+                    const allowed = (data.view_keys || []);
+                    const viewActions = (data.view_actions || {});
+                    checkboxesContainer.querySelectorAll('.role-view-checkbox').forEach(function (cb) {
+                        cb.checked = allowed.indexOf(cb.value) !== -1;
+                    });
+                    checkboxesContainer.querySelectorAll('.role-view-action-checkbox').forEach(function (cb) {
+                        const viewKey = cb.dataset.viewKey;
+                        const action = cb.dataset.action;
+                        const actions = viewActions[viewKey] || [];
+                        cb.checked = actions.indexOf(action) !== -1;
+                    });
+                    syncExpandState();
+                    updatePreviewUrl();
+                })
+                .catch(function () {
+                    checkboxesContainer.querySelectorAll('.role-view-checkbox').forEach(function (cb) {
+                        cb.checked = false;
+                    });
+                    checkboxesContainer.querySelectorAll('.role-view-action-checkbox').forEach(function (cb) {
+                        cb.checked = false;
+                    });
+                    syncExpandState();
+                    updatePreviewUrl();
+                });
+        }
+
+        function closeModal() {
+            currentRoleId = null;
+            if (modal) modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function saveRoleViews() {
+            if (!currentRoleId) return;
+            const keys = getCheckedViewKeys();
+            const viewActions = getCheckedViewActions();
+            const body = new FormData();
+            body.append('role_id', currentRoleId);
+            keys.forEach(function (k) { body.append('view_keys[]', k); });
+            Object.keys(viewActions).forEach(function (viewKey) {
+                viewActions[viewKey].forEach(function (action) {
+                    body.append('view_actions[' + viewKey + '][]', action);
+                });
+            });
+
+            saveBtn.disabled = true;
+            fetch('/admin/settings/role-views', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: body
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        if (typeof window.GAC !== 'undefined' && window.GAC.success) {
+                            window.GAC.success(data.message || 'Vistas guardadas.', 'Guardado');
+                        } else {
+                            alert(data.message || 'Vistas guardadas.');
+                        }
+                        closeModal();
+                    } else {
+                        if (typeof window.GAC !== 'undefined' && window.GAC.error) {
+                            window.GAC.error(data.message || 'Error al guardar', 'Error');
+                        } else {
+                            alert(data.message || 'Error al guardar');
+                        }
+                    }
+                })
+                .catch(function () {
+                    if (typeof window.GAC !== 'undefined' && window.GAC.error) {
+                        window.GAC.error('Error de conexión.', 'Error');
+                    } else {
+                        alert('Error de conexión.');
+                    }
+                })
+                .finally(function () {
+                    saveBtn.disabled = false;
+                });
+        }
+
+        document.querySelectorAll('.btn-edit-role').forEach(function (btn) {
+            var row = btn.closest('.role-row');
+            if (!row) return;
+            var roleId = row.dataset.roleId;
+            var roleName = row.dataset.roleName || '';
+            btn.addEventListener('click', function () {
+                openModal(roleId, roleName);
+            });
+        });
+
+        if (checkboxesContainer) {
+            checkboxesContainer.addEventListener('change', function (e) {
+                if (e.target && e.target.classList.contains('role-view-checkbox')) {
+                    syncExpandState();
+                }
+                updatePreviewUrl();
+            });
+            checkboxesContainer.querySelectorAll('.role-view-parent').forEach(function (parent) {
+                parent.addEventListener('click', function (e) {
+                    if (e.target.classList.contains('role-view-expand-icon')) {
+                        e.preventDefault();
+                        var item = parent.closest('.role-view-item');
+                        if (item) item.classList.toggle('expanded');
+                    }
+                });
+            });
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (saveBtn) saveBtn.addEventListener('click', saveRoleViews);
+
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) closeModal();
+            });
+        }
+    }
+
+    function fetchWithTimeout(url, options, ms) {
+        const ctrl = new AbortController();
+        const id = setTimeout(function() { ctrl.abort(); }, ms || 8000);
+        return fetch(url, { ...options, signal: ctrl.signal }).finally(function() { clearTimeout(id); });
+    }
+
+    /**
+     * Actualizar estado del lector continuo
+     */
+    async function updateReaderLoopStatus() {
+        const statusEl = document.getElementById('readerLoopStatus');
+        const btnEl = document.getElementById('btnStartReaderLoop');
+        if (!statusEl) return;
+        try {
+            const res = await fetchWithTimeout('/admin/reader-loop/status', { headers: { 'X-Requested-With': 'XMLHttpRequest' } }, 5000);
+            const data = await res.json();
+            if (data.running) {
+                statusEl.textContent = 'Corriendo';
+                statusEl.style.color = '#059669';
+                if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Ya está en ejecución'; }
+            } else {
+                statusEl.textContent = 'Detenido';
+                statusEl.style.color = '#6b7280';
+                if (btnEl) { btnEl.disabled = false; btnEl.textContent = 'Iniciar lector continuo'; }
+            }
+        } catch (e) {
+            statusEl.textContent = '—';
+            if (btnEl) { btnEl.disabled = false; btnEl.textContent = 'Iniciar lector continuo'; }
+        }
+    }
+
+    /**
+     * Iniciar lector continuo
+     */
+    async function handleStartReaderLoop() {
+        const btnEl = document.getElementById('btnStartReaderLoop');
+        const msgEl = document.getElementById('readerLoopMessage');
+        if (!btnEl) return;
+        btnEl.disabled = true;
+        if (msgEl) msgEl.textContent = 'Iniciando...';
+        try {
+            const res = await fetchWithTimeout('/admin/reader-loop/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            }, 10000);
+            const data = await res.json();
+            if (msgEl) msgEl.textContent = data.message || (data.success ? 'Solicitud enviada.' : (data.message || ''));
+            await updateReaderLoopStatus();
+        } catch (e) {
+            if (msgEl) msgEl.textContent = 'Timeout o error. Si el lector arrancó, el estado se actualizará al recargar. Usa el cron ensure_reader_loop.sh para inicio automático.';
+            btnEl.disabled = false;
+            btnEl.textContent = 'Iniciar lector continuo';
+            updateReaderLoopStatus();
+        }
+    }
+
+    /**
+     * Manejar envío del formulario
+     */
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+
+        if (!validateForm()) {
+            await window.GAC.error('Por favor corrige los errores en el formulario.', 'Error de Validación');
+            return;
+        }
+
+        setLoadingState(true);
+        clearAllErrors();
+
+        const formData = new FormData(settingsForm);
+        const data = Object.fromEntries(formData.entries());
+        data.master_consult_enabled = document.getElementById('master_consult_enabled')?.checked ? '1' : '0';
+        data.master_consult_username = (document.getElementById('master_consult_username')?.value || '').trim();
+
+        try {
+            const response = await fetch('/admin/settings/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                await window.GAC.success(
+                    result.message || 'Configuración actualizada correctamente.',
+                    'Configuración Guardada'
+                );
+                // Opcional: recargar la página después de un breve delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                await window.GAC.error(
+                    result.message || 'Error al actualizar la configuración.',
+                    'Error'
+                );
+            }
+        } catch (error) {
+            console.error('Error al actualizar configuración:', error);
+            await window.GAC.error(
+                'Ocurrió un error al actualizar la configuración. Por favor intenta nuevamente.',
+                'Error de Conexión'
+            );
+        } finally {
+            setLoadingState(false);
+        }
+    }
+
+    /**
+     * Manejar cancelar
+     */
+    function handleCancel() {
+        // Resetear formulario al valor original
+        if (sessionTimeoutSelect) {
+            const originalValue = sessionTimeoutSelect.dataset.originalValue || sessionTimeoutSelect.options[0].value;
+            sessionTimeoutSelect.value = originalValue;
+        }
+        clearAllErrors();
+    }
+
+    /**
+     * Validar formulario
+     */
+    function validateForm() {
+        let isValid = true;
+
+        // Validar tiempo de sesión
+        if (sessionTimeoutSelect) {
+            const value = parseInt(sessionTimeoutSelect.value);
+            const allowedValues = [1, 2, 3, 5, 7];
+            
+            if (!allowedValues.includes(value)) {
+                showFieldError('sessionTimeoutHoursError', 'Selecciona un tiempo de sesión válido');
+                isValid = false;
+            } else {
+                clearFieldError('sessionTimeoutHoursError');
+            }
+        }
+
+        return isValid;
+    }
+
+    /**
+     * Mostrar error de campo
+     */
+    function showFieldError(fieldId, message) {
+        const errorElement = document.getElementById(fieldId);
+        const formGroup = errorElement?.closest('.form-group');
+        
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+        
+        if (formGroup) {
+            formGroup.classList.add('has-error');
+        }
+    }
+
+    /**
+     * Limpiar error de campo
+     */
+    function clearFieldError(fieldId) {
+        const errorElement = document.getElementById(fieldId);
+        const formGroup = errorElement?.closest('.form-group');
+        
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+        }
+        
+        if (formGroup) {
+            formGroup.classList.remove('has-error');
+        }
+    }
+
+    /**
+     * Limpiar todos los errores
+     */
+    function clearAllErrors() {
+        const errorElements = settingsForm?.querySelectorAll('.form-error');
+        errorElements?.forEach(error => {
+            error.textContent = '';
+            error.style.display = 'none';
+        });
+
+        const formGroups = settingsForm?.querySelectorAll('.form-group');
+        formGroups?.forEach(group => {
+            group.classList.remove('has-error');
+        });
+    }
+
+    /**
+     * Establecer estado de carga
+     */
+    function setLoadingState(loading) {
+        const submitBtn = settingsForm?.querySelector('button[type="submit"]');
+        if (!submitBtn) return;
+        
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoader = submitBtn.querySelector('.btn-loader');
+        
+        if (loading) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoader) btnLoader.style.display = 'block';
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+            if (btnText) btnText.style.display = 'block';
+            if (btnLoader) btnLoader.style.display = 'none';
+        }
+    }
+
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();

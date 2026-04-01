@@ -1,0 +1,543 @@
+<?php
+/**
+ * GAC - Repositorio de Usuarios
+ *
+ * Maneja el acceso a datos para la tabla `users`.
+ *
+ * @package Gac\Repositories
+ */
+
+namespace Gac\Repositories;
+
+use Gac\Helpers\Database;
+use PDO;
+use PDOException;
+
+class UserRepository
+{
+    private PDO $db;
+
+    public function __construct()
+    {
+        $this->db = Database::getConnection();
+    }
+
+    /**
+     * Obtener un usuario por su nombre de usuario.
+     *
+     * @param string $username
+     * @return array|false
+     */
+    public function findByUsername(string $username): array|false
+    {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE username = :username");
+        $stmt->execute([':username' => $username]);
+        return $stmt->fetch();
+    }
+
+    /**
+     * Obtener un usuario por su email.
+     *
+     * @param string $email
+     * @return array|false
+     */
+    public function findByEmail(string $email): array|false
+    {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :email");
+        $stmt->execute([':email' => $email]);
+        return $stmt->fetch();
+    }
+
+    /**
+     * Obtener un usuario por su ID.
+     *
+     * @param int $id
+     * @return array|false
+     */
+    public function findById(int $id): array|false
+    {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch();
+    }
+
+    /**
+     * Actualizar último login del usuario.
+     *
+     * @param int $userId
+     * @return bool
+     */
+    public function updateLastLogin(int $userId): bool
+    {
+        $stmt = $this->db->prepare("UPDATE users SET last_login = NOW() WHERE id = :id");
+        try {
+            return $stmt->execute([':id' => $userId]);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar último login (ID: {$userId}): " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Guardar un nuevo usuario.
+     *
+     * @param array $data
+     * @return int|false ID del nuevo usuario o false en caso de error.
+     */
+    public function save(array $data): int|false
+    {
+        $sql = "INSERT INTO users (username, email, password, role_id, active)
+                VALUES (:username, :email, :password, :role_id, :active)";
+        $stmt = $this->db->prepare($sql);
+
+        try {
+            $stmt->execute([
+                ':username' => $data['username'],
+                ':email' => $data['email'],
+                ':password' => $data['password'], // Ya debe venir encriptada
+                ':role_id' => $data['role_id'],
+                ':active' => $data['active'] ?? 1
+            ]);
+            return (int)$this->db->lastInsertId();
+        } catch (PDOException $e) {
+            error_log("Error al guardar usuario: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Crear automáticamente un usuario de tipo "revendedor" a partir de un username,
+     * siempre que tenga al menos $minAccounts cuentas asignadas en user_access.
+     *
+     * La contraseña será el mismo username (encriptado) y el email se genera
+     * como username@revendedor.local para cumplir la restricción NOT NULL/UNIQUE.
+     *
+     * Devuelve el array del usuario creado o existente, o false si no aplica.
+     */
+    public function createResellerIfEligible(string $username, string $rawPassword, int $minAccounts = 10): array|false
+    {
+        $username = trim($username);
+        $rawPassword = (string) $rawPassword;
+
+        if ($username === '' || $rawPassword === '') {
+            return false;
+        }
+
+        // Debe coincidir usuario = contraseña según requisito del cliente
+        if ($username !== $rawPassword) {
+            return false;
+        }
+
+        try {
+            $db = $this->db;
+
+            // Verificar si ya existe usuario con ese username
+            $existing = $this->findByUsername($username);
+            if ($existing) {
+                return $existing;
+            }
+
+            // Contar cuántas cuentas tiene asignadas en user_access (password = username)
+            $stmt = $db->prepare("
+                SELECT COUNT(*) AS total
+                FROM user_access
+                WHERE password = :username
+            ");
+            $stmt->execute([':username' => $username]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $total = (int) ($row['total'] ?? 0);
+
+            if ($total < $minAccounts) {
+                // No cumple el mínimo de cuentas para ser revendedor
+                return false;
+            }
+
+            // Obtener/crear rol REVENDEDOR
+            $roleId = null;
+            $roleStmt = $db->prepare("SELECT id FROM roles WHERE name = :name LIMIT 1");
+            $roleStmt->execute([':name' => 'REVENDEDOR']);
+            $roleRow = $roleStmt->fetch(PDO::FETCH_ASSOC);
+            if ($roleRow && isset($roleRow['id'])) {
+                $roleId = (int) $roleRow['id'];
+            } else {
+                $insertRole = $db->prepare("INSERT INTO roles (name, display_name, description) VALUES (:name, :display_name, :description)");
+                $insertRole->execute([
+                    ':name' => 'REVENDEDOR',
+                    ':display_name' => 'Revendedor',
+                    ':description' => 'Usuarios revendedores que gestionan sus propias cuentas vendidas',
+                ]);
+                $roleId = (int) $db->lastInsertId();
+            }
+
+            if ($roleId <= 0) {
+                return false;
+            }
+
+            // Generar email único para este username
+            $baseEmail = strtolower($username) . '@revendedor.local';
+            $email = $baseEmail;
+            $suffix = 1;
+            while (true) {
+                $checkStmt = $db->prepare("SELECT 1 FROM users WHERE email = :email LIMIT 1");
+                $checkStmt->execute([':email' => $email]);
+                if (!$checkStmt->fetch()) {
+                    break;
+                }
+                $email = strtolower($username) . '+' . $suffix . '@revendedor.local';
+                $suffix++;
+            }
+
+            $passwordHash = password_hash($rawPassword, PASSWORD_DEFAULT);
+
+            $id = $this->save([
+                'username' => $username,
+                'email' => $email,
+                'password' => $passwordHash,
+                'role_id' => $roleId,
+                'active' => 1,
+            ]);
+
+            if (!$id) {
+                return false;
+            }
+
+            return $this->findById($id) ?: false;
+        } catch (PDOException $e) {
+            error_log('UserRepository::createResellerIfEligible error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Obtener todos los administradores (roles admin / SUPER_ADMIN)
+     * @return array
+     */
+    public function findAllAdministrators(): array
+    {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.active,
+                    u.last_login,
+                    u.created_at,
+                    r.name as role_name,
+                    r.display_name as role_display_name
+                FROM users u
+                INNER JOIN roles r ON u.role_id = r.id
+                WHERE u.active = 1 
+                  AND (r.name = 'SUPER_ADMIN' OR r.name = 'ADMIN' OR r.name = 'admin')
+                ORDER BY u.created_at DESC
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error al obtener administradores: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtener todos los usuarios con su rol (para lista de administradores que incluye Comprador, etc.)
+     * @return array
+     */
+    public function findAllUsersWithRoles(): array
+    {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.active,
+                    u.last_login,
+                    u.created_at,
+                    r.name as role_name,
+                    r.display_name as role_display_name
+                FROM users u
+                LEFT JOIN roles r ON u.role_id = r.id
+                ORDER BY u.created_at DESC
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $e) {
+            error_log("Error al obtener usuarios con roles: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Usuarios con su rol excluyendo el rol REVENDEDOR (para panel Administradores en Configuración).
+     * @return array
+     */
+    public function findAllUsersWithRolesExcludingRevendedor(): array
+    {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.active,
+                    u.last_login,
+                    u.created_at,
+                    r.name as role_name,
+                    r.display_name as role_display_name
+                FROM users u
+                LEFT JOIN roles r ON u.role_id = r.id
+                WHERE UPPER(COALESCE(r.name, '')) != 'REVENDEDOR'
+                ORDER BY u.created_at DESC
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $e) {
+            error_log("Error al obtener usuarios excluyendo revendedor: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Contar administradores
+     * 
+     * @return int
+     */
+    public function countAdministrators(): int
+    {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as count 
+                FROM users u
+                INNER JOIN roles r ON u.role_id = r.id
+                WHERE u.active = 1 
+                  AND (r.name = 'SUPER_ADMIN' OR r.name = 'ADMIN')
+            ");
+            $stmt->execute();
+            return (int) ($stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0);
+        } catch (PDOException $e) {
+            error_log("Error al contar administradores: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Actualizar contraseña de usuario
+     * 
+     * @param int $userId
+     * @param string $newPassword (ya encriptada)
+     * @return bool
+     */
+    public function updatePassword(int $userId, string $newPassword): bool
+    {
+        try {
+            $stmt = $this->db->prepare("UPDATE users SET password = :password WHERE id = :id");
+            return $stmt->execute([
+                ':password' => $newPassword,
+                ':id' => $userId
+            ]);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar contraseña: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Actualizar datos de usuario
+     * 
+     * @param int $userId
+     * @param array $data
+     * @return bool
+     */
+    public function update(int $userId, array $data): bool
+    {
+        try {
+            $fields = [];
+            $params = [':id' => $userId];
+
+            if (isset($data['username'])) {
+                $fields[] = 'username = :username';
+                $params[':username'] = $data['username'];
+            }
+            if (isset($data['email'])) {
+                $fields[] = 'email = :email';
+                $params[':email'] = $data['email'];
+            }
+            if (isset($data['active'])) {
+                $fields[] = 'active = :active';
+                $params[':active'] = $data['active'];
+            }
+
+            if (empty($fields)) {
+                return false;
+            }
+
+            $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = :id";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar usuario: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Buscar y paginar usuarios
+     * 
+     * @param int $page
+     * @param int $perPage
+     * @param string $search
+     * @return array
+     */
+    public function searchAndPaginate(int $page = 1, int $perPage = 15, string $search = ''): array
+    {
+        try {
+            $params = [];
+            $whereClause = '';
+
+            if (!empty($search)) {
+                $searchLower = '%' . strtolower($search) . '%';
+                $whereClause = "WHERE LOWER(username) LIKE :search OR LOWER(email) LIKE :search";
+                $params['search'] = $searchLower;
+            }
+
+            // Contar total
+            $countStmt = $this->db->prepare("SELECT COUNT(*) as total FROM users {$whereClause}");
+            $countStmt->execute($params);
+            $total = (int) $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            // Calcular paginación
+            $totalPages = $perPage > 0 ? ceil($total / $perPage) : 1;
+            $offset = ($page - 1) * $perPage;
+            
+            // Obtener datos paginados
+            $limitClause = $perPage > 0 ? "LIMIT {$perPage} OFFSET {$offset}" : '';
+            
+            $stmt = $this->db->prepare("
+                SELECT 
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.active,
+                    u.last_login,
+                    u.created_at,
+                    r.name as role_name,
+                    r.display_name as role_display_name
+                FROM users u
+                LEFT JOIN roles r ON u.role_id = r.id
+                {$whereClause}
+                ORDER BY u.created_at DESC
+                {$limitClause}
+            ");
+            
+            $stmt->execute($params);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'data' => $data,
+                'total' => $total,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => $totalPages
+            ];
+        } catch (PDOException $e) {
+            error_log("Error al buscar y paginar usuarios: " . $e->getMessage());
+            return [
+                'data' => [],
+                'total' => 0,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => 1
+            ];
+        }
+    }
+
+    /**
+     * Buscar y paginar solo usuarios con rol REVENDEDOR, incluyendo
+     * el número de cuentas asignadas (user_access.password = username).
+     *
+     * @return array{data:array,total:int,page:int,per_page:int,total_pages:int}
+     */
+    public function searchResellersPaginate(int $page = 1, int $perPage = 15, string $search = ''): array
+    {
+        try {
+            $params = [];
+            $where = "WHERE UPPER(r.name) = 'REVENDEDOR'";
+
+            if ($search !== '') {
+                $searchLower = '%' . strtolower($search) . '%';
+                $where .= " AND (LOWER(u.username) LIKE :search OR LOWER(u.email) LIKE :search)";
+                $params[':search'] = $searchLower;
+            }
+
+            // Contar total de revendedores (todos, tengan o no 10+ cuentas)
+            $countSql = "
+                SELECT COUNT(*) AS total
+                FROM users u
+                INNER JOIN roles r ON u.role_id = r.id
+                {$where}
+            ";
+            $countStmt = $this->db->prepare($countSql);
+            $countStmt->execute($params);
+            $total = (int) ($countStmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+
+            $totalPages = $perPage > 0 ? (int) ceil($total / $perPage) : 1;
+            $offset = ($page - 1) * $perPage;
+            $limitClause = $perPage > 0 ? "LIMIT {$perPage} OFFSET {$offset}" : '';
+
+            // Datos con cantidad de cuentas (user_access.password = username); incluir todos los revendedores
+            $sql = "
+                SELECT
+                    u.id,
+                    u.username,
+                    u.email,
+                    u.active,
+                    u.created_at,
+                    (
+                        SELECT COUNT(*)
+                        FROM user_access ua
+                        WHERE ua.password = u.username
+                    ) AS accounts_count
+                FROM users u
+                INNER JOIN roles r ON u.role_id = r.id
+                {$where}
+                ORDER BY u.created_at DESC
+                {$limitClause}
+            ";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+            return [
+                'data' => $data,
+                'total' => $total,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => $totalPages,
+            ];
+        } catch (PDOException $e) {
+            error_log('UserRepository::searchResellersPaginate error: ' . $e->getMessage());
+            return [
+                'data' => [],
+                'total' => 0,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => 1,
+            ];
+        }
+    }
+
+    /**
+     * Eliminar usuario por ID.
+     */
+    public function delete(int $id): bool
+    {
+        try {
+            $stmt = $this->db->prepare("DELETE FROM users WHERE id = :id");
+            return $stmt->execute([':id' => $id]);
+        } catch (PDOException $e) {
+            error_log('UserRepository::delete error: ' . $e->getMessage());
+            return false;
+        }
+    }
+}

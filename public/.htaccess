@@ -1,0 +1,40 @@
+# GAC - Apache Configuration
+# Rewrite Rules para URLs amigables
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Excluir archivos y directorios que existen físicamente
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Redirigir todo a index.php
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Configuración de sesión PHP (si el servidor lo permite)
+# Timeout máximo: 7 horas (25200 segundos) - el timeout real se controla desde settings
+<IfModule mod_php7.c>
+    php_value session.gc_maxlifetime 25200
+</IfModule>
+<IfModule mod_php8.c>
+    php_value session.gc_maxlifetime 25200
+</IfModule>
+
+# Prevenir acceso a archivos sensibles
+<FilesMatch "\.(env|log|sql|md)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Headers de cache para archivos estáticos (desarrollo)
+# En producción, puedes cambiar esto para permitir cache
+<IfModule mod_headers.c>
+    # CSS y JS sin cache en desarrollo
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+</IfModule>

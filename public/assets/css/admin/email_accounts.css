@@ -1,0 +1,939 @@
+/**
+ * GAC - Estilos para Gestión de Cuentas de Email
+ * Tabla con búsqueda, paginación y diseño mejorado
+ */
+
+/* ============================================
+   ALERTAS (Gmail connect success/error)
+   ============================================ */
+.alert {
+    padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
+    border-radius: var(--border-radius, 8px);
+    margin-bottom: var(--spacing-md, 12px);
+    font-size: var(--font-size-sm, 14px);
+}
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Lista de cuentas: botón Excel arriba a la derecha, fuera del div principal */
+.lista-cuentas-excel-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+/* Mismo color que botón Excel de Actividad de administrador */
+.lista-cuentas-excel-bar .btn-excel-lista {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #0d9488;
+    color: #ffffff;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all var(--transition-base);
+}
+.lista-cuentas-excel-bar .btn-excel-lista:hover {
+    background: #0f766e;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* ============================================
+   CHECKBOXES Y SELECCIÓN MÚLTIPLE
+   ============================================ */
+.checkbox-column {
+    display: none !important;
+    width: 40px;
+    text-align: center;
+}
+
+.checkbox-column.show {
+    display: table-cell !important;
+}
+
+.admin-table input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}
+
+.admin-table th input[type="checkbox"] {
+    margin: 0;
+}
+
+.row-checkbox {
+    cursor: pointer;
+}
+
+/* Columna Correo: tipografía Franklin Gothic Medium Cond */
+.admin-table .email-cell {
+    font-family: "Franklin Gothic Medium Cond", "Franklin Gothic", "Arial Narrow", sans-serif;
+}
+
+/* ============================================
+   BOTÓN ELIMINAR MASIVO
+   ============================================ */
+.btn-danger {
+    background: #dc3545;
+    color: #ffffff;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    transition: all var(--transition-base);
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-danger:active {
+    transform: translateY(0);
+}
+
+/* ============================================
+   HEADER CON EXCEL ARRIBA DERECHA
+   ============================================ */
+.admin-header--with-excel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+.admin-header-actions { flex-shrink: 0; }
+.excel-export-wrap .btn-excel {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* Fila: opciones Todo/Gmail/Outlook/Pocoyoni + Excel a la derecha (misma altura) */
+.correos-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+.correos-filter-slider {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+.correos-filter-excel {
+    flex-shrink: 0;
+}
+
+/* ============================================
+   Tabla de Usuarios (Revendedores) /admin/users
+   Centrar contenido bajo cada cabecera
+   ============================================ */
+#usersTable th,
+#usersTable td {
+    text-align: center;
+}
+
+#usersTable .table-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* Toggle tipo plataformas activas, reutilizado para columna Acceso en /admin/users */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
+}
+.toggle-switch .toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.toggle-switch .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background-color: #dc3545;
+    border-radius: 24px;
+    transition: background-color 0.25s ease;
+}
+.toggle-switch .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.25s ease;
+}
+.toggle-switch .toggle-input:checked + .toggle-slider {
+    background-color: #28a745;
+}
+.toggle-switch .toggle-input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+.access-blocked-label {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #94a3b8;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 6px;
+}
+.correos-filter-pill {
+    display: inline-block;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-base);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+    font-family: inherit;
+}
+.correos-filter-pill:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+}
+.correos-filter-pill.active {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+
+/* Modal exportar Excel: 4 cards */
+.excel-export-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+}
+.excel-export-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm, 8px);
+    padding: var(--spacing-xl);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    transition: all var(--transition-base);
+}
+.excel-export-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.excel-export-card-icon svg {
+    vertical-align: middle;
+}
+.excel-export-card-icon--gmail svg,
+.excel-export-card-icon--outlook svg {
+    display: block;
+}
+.excel-export-card-icon--pocoyoni svg text {
+    fill: #F5D000;
+}
+.excel-export-card:hover .excel-export-card-icon--pocoyoni svg text {
+    fill: #F5D000;
+}
+.excel-export-card:hover {
+    background: rgba(0, 102, 255, 0.15);
+    border-color: var(--color-primary);
+    color: var(--color-primary-light);
+}
+
+/* ============================================
+   TABLE CONTROLS (Búsqueda y Filtros)
+   ============================================ */
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.table-controls-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    transition: all var(--transition-base);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--color-primary);
+}
+
+.btn-secondary.active,
+.btn-secondary.btn-primary {
+    background: var(--color-primary);
+    color: var(--text-on-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-secondary.active:hover,
+.btn-secondary.btn-primary:hover {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+.btn-excel {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background: #0d9488;
+    color: #ffffff;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.btn-excel:hover {
+    background: #0f766e;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.email-filters-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+/* Variables para filtros tipo Análisis (dropdown Plataforma mismo estilo/color) */
+.email-filters-bar.lista-cuentas-filters {
+    --analisis-text: #F8FAFC;
+    --analisis-text-secondary: #94A3B8;
+    --analisis-accent: #38BDF8;
+    --analisis-card-bg: #1E293B;
+    --analisis-card-border: #2D3748;
+}
+/* Desplegable Plataforma: mismo ancho que el filtro (congruente) */
+.email-filters-bar #listaCuentasPlatformDropdown.analisis-filter-dropdown {
+    min-width: 0;
+}
+.email-filters-bar #listaCuentasPlatformDropdown .analisis-filter-menu {
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Filtro Tiempo en Lista de cuentas: width 130px */
+.email-filters-bar #listaCuentasTimeFilterDropdown.activity-filter-dropdown {
+    width: 130px;
+    min-width: 130px;
+}
+.email-filters-bar #listaCuentasTimeFilterDropdown .activity-filter-menu {
+    min-width: 130px;
+    width: 130px;
+}
+
+.email-filter-select,
+.email-filter-date {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.email-filter-select {
+    min-width: 140px;
+}
+
+.email-filter-date {
+    min-width: 150px;
+}
+
+/* Unificar estilos de búsqueda */
+.search-box,
+.search-input-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+    max-width: 400px;
+}
+
+/* Icono de búsqueda - debe estar antes del input en el HTML */
+.search-box .search-icon,
+.search-input-wrapper .search-icon {
+    position: absolute;
+    left: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: color var(--transition-base);
+    z-index: 1;
+}
+
+/* Input de búsqueda */
+.search-box .search-input,
+.search-input-wrapper .search-input {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-sm));
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    transition: all var(--transition-base);
+    outline: none;
+}
+
+/* Placeholder con color correcto */
+.search-box .search-input::placeholder,
+.search-input-wrapper .search-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* Focus en input */
+.search-box .search-input:focus,
+.search-input-wrapper .search-input:focus {
+    border-color: var(--color-primary);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+/* Cambiar color del icono cuando el input tiene focus o contenido */
+.search-box .search-input:focus ~ .search-icon,
+.search-input-wrapper .search-input:focus ~ .search-icon,
+.search-box .search-input:not(:placeholder-shown) ~ .search-icon,
+.search-input-wrapper .search-input:not(:placeholder-shown) ~ .search-icon {
+    color: var(--color-primary-light);
+}
+
+.search-clear,
+.clear-search-btn {
+    position: absolute;
+    right: var(--spacing-sm);
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-base);
+    z-index: 2;
+}
+
+.search-clear:hover,
+.clear-search-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.per-page-selector {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.per-page-label {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.per-page-select,
+.form-select,
+select.form-select,
+select.per-page-select {
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-right: calc(var(--spacing-md) + 20px);
+    background: rgba(255, 255, 255, 0.05) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: var(--border-radius);
+    color: var(--text-primary) !important;
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    outline: none;
+    min-width: 80px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.per-page-select:focus,
+.form-select:focus {
+    border-color: var(--color-primary);
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.per-page-select:hover,
+.form-select:hover {
+    border-color: var(--color-primary-light);
+}
+
+/* Opciones del select con tema oscuro */
+.per-page-select option,
+.form-select option {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    padding: var(--spacing-sm);
+}
+
+/* Wrapper para select con flecha personalizada */
+.per-page-selector {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.per-page-selector label {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.per-page-selector::after {
+    content: '';
+    position: absolute;
+    right: calc(var(--spacing-md) + 2px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--text-secondary);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ============================================
+   TABLE ENHANCEMENTS
+   ============================================ */
+.table-container {
+    overflow-x: auto;
+    border-radius: var(--border-radius);
+    background: rgba(26, 35, 50, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.admin-table thead {
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 2px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.admin-table th {
+    padding: var(--spacing-md);
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.admin-table tbody tr {
+    transition: all var(--transition-base);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+    transform: scale(1.001);
+}
+
+.admin-table tbody tr.table-row {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.admin-table td {
+    padding: var(--spacing-md);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-table .email-cell {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Celdas centradas: Usuario, Plataforma, Administrador, Actividad, Acciones, ID, Correo */
+.admin-table td.text-center,
+.admin-table .user-cell,
+.admin-table .platform-cell,
+.admin-table .administrador-cell {
+    text-align: center;
+}
+
+.admin-table .user-cell {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-table .actions-cell {
+    white-space: nowrap;
+    width: 150px;
+}
+
+/* Vista Correos registrados: centrar Asignado y Acciones (encabezado + contenido + icono) */
+#correosRegistradosTable th,
+#correosRegistradosTable td.asignado-cell,
+#correosRegistradosTable td.actions-cell {
+    text-align: center;
+}
+
+.actions-cell .btn-delete-filtered:hover {
+    border-color: var(--color-danger, #dc3545);
+    color: var(--color-danger, #dc3545);
+}
+
+/* ============================================
+   PLATAFORMAS (BADGES)
+   ============================================ */
+.platform-cell {
+    padding: var(--spacing-md) !important;
+}
+
+.platform-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    margin: 2px 4px 2px 0;
+    background: rgba(var(--color-primary-rgb, 59, 130, 246), 0.2);
+    color: var(--color-primary-light, #60a5fa);
+    border: 1px solid rgba(var(--color-primary-rgb, 59, 130, 246), 0.3);
+    border-radius: 12px;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all var(--transition-base);
+}
+
+.platform-badge:hover {
+    background: rgba(var(--color-primary-rgb, 59, 130, 246), 0.3);
+    transform: translateY(-1px);
+}
+
+.platform-badge.empty {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.platforms-display {
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    min-height: 50px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.email-cell {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-family: 'Courier New', monospace;
+    font-size: var(--font-size-sm);
+}
+
+.user-cell {
+    color: var(--color-primary-light);
+    font-weight: 500;
+}
+
+.sync-time {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+}
+
+.sync-time.never {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.pagination-info {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.pagination-info strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    outline: none;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.pagination-page {
+    min-width: 36px;
+    height: 36px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-page:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-primary-light);
+    transform: translateY(-2px);
+}
+
+.pagination-page.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.2);
+}
+
+.pagination-ellipsis {
+    color: var(--text-muted);
+    padding: 0 var(--spacing-xs);
+    user-select: none;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+.table-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.table-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--border-radius);
+    z-index: 100;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .table-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-box {
+        max-width: 100%;
+    }
+
+    .per-page-selector {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .pagination-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pagination-controls {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .admin-table {
+        font-size: var(--font-size-xs);
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: var(--spacing-sm);
+    }
+
+    .pagination-pages {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-table th,
+    .admin-table td {
+        padding: var(--spacing-xs);
+        font-size: var(--font-size-xs);
+    }
+
+    .pagination-page {
+        min-width: 32px;
+        height: 32px;
+        font-size: var(--font-size-xs);
+    }
+}

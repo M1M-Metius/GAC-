@@ -1,0 +1,67 @@
+===========================================
+COMANDOS PARA EJECUTAR GAC - SISTEMA PHP
+===========================================
+
+PASO 1: Navegar al directorio del proyecto
+--------------------------------------------
+cd SISTEMA_GAC
+
+
+PASO 2: Instalar dependencias de Composer
+------------------------------------------
+composer install --ignore-platform-req=ext-imap
+
+(Nota: Ignoramos IMAP porque es opcional para desarrollo local)
+
+
+PASO 3: Crear archivo .env (si no existe)
+-------------------------------------------
+# Si no existe .env, crearlo manualmente o ejecutar:
+Copy-Item .env.example .env -ErrorAction SilentlyContinue
+
+# Si no existe .env.example, crear uno básico con este contenido mínimo:
+# APP_NAME=GAC
+# APP_ENV=development
+# APP_DEBUG=true
+# APP_URL=http://localhost:8000
+
+
+PASO 4: Iniciar el servidor PHP
+--------------------------------
+# Opción 1: Con router (recomendado para desarrollo)
+php -S localhost:8000 -t public public/router.php
+
+# Opción 2: Sin router (solo si usas Apache)
+php -S localhost:8000 -t public
+
+
+PASO 5: Abrir en el navegador
+------------------------------
+Abre tu navegador y visita:
+http://localhost:8000
+
+
+===========================================
+COMANDOS ALTERNATIVOS (si hay problemas)
+===========================================
+
+Si el puerto 8000 está ocupado, usa otro puerto:
+php -S localhost:8080 -t public
+
+Para verificar que PHP está funcionando:
+php -v
+
+Para verificar Composer:
+composer --version
+
+Para detener el servidor:
+Presiona Ctrl + C en la terminal
+
+===========================================
+NOTAS IMPORTANTES
+===========================================
+
+- El sistema funcionará sin base de datos para ver la interfaz
+- La funcionalidad completa requiere base de datos (se implementará después)
+- Los errores se mostrarán en pantalla si APP_DEBUG=true
+- El servidor debe seguir corriendo para que funcione el sistema

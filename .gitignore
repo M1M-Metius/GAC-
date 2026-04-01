@@ -1,0 +1,61 @@
+# Dependencias
+/vendor/
+/node_modules/
+
+# Archivos de configuración sensibles
+.env
+.env.local
+.env.*.local
+
+# Logs
+/logs/*
+!/logs/.gitkeep
+*.log
+
+# Archivos temporales
+*.tmp
+*.cache
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Base de datos
+*.sql.backup
+*.sql.gz
+
+# Uploads
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Tests
+/phpunit.xml
+/phpunit.result.cache
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Composer
+composer.phar
+composer.lock
+
+# Archivos del sistema
+*.bak
+*.swp
+*.swo
+
+# Documentación (opcional - descomenta si no quieres subirla)
+# *.md
+# !README.md
