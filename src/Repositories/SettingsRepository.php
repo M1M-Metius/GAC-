@@ -295,6 +295,30 @@ class SettingsRepository
     }
 
     /**
+     * Obtener timeout de sesión en minutos (compatibilidad legacy)
+     */
+    public function getSessionTimeout(): int
+    {
+        return (int) $this->get('SESSION_TIMEOUT', 120);
+    }
+
+    /**
+     * Obtener si la cookie de sesión requiere HTTPS (compatibilidad legacy)
+     */
+    public function getSessionSecure(): bool
+    {
+        return (bool) $this->get('SESSION_SECURE', false);
+    }
+
+    /**
+     * Obtener si la cookie de sesión es HttpOnly (compatibilidad legacy)
+     */
+    public function getSessionHttpOnly(): bool
+    {
+        return (bool) $this->get('SESSION_HTTPONLY', true);
+    }
+
+    /**
      * Convertir valor según tipo
      * 
      * @param string $value
