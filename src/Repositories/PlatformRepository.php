@@ -16,6 +16,54 @@ use PDOException;
 class PlatformRepository
 {
     /**
+     * Obtener todas las plataformas
+     *
+     * @return array
+     */
+    public function findAll(): array
+    {
+        try {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("
+                SELECT id, name, display_name, enabled, config
+                FROM platforms
+                ORDER BY display_name ASC
+            ");
+
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error al obtener plataformas: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Actualizar estado habilitado de una plataforma
+     */
+    public function setEnabled(string $name, bool $enabled): bool
+    {
+        try {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("
+                UPDATE platforms
+                SET enabled = :enabled
+                WHERE name = :name
+            ");
+
+            $stmt->execute([
+                'name' => $name,
+                'enabled' => $enabled ? 1 : 0,
+            ]);
+
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Error al actualizar plataforma '{$name}': " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Obtener todas las plataformas habilitadas
      * 
      * @return array

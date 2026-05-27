@@ -1,0 +1,98 @@
+.settings-content {
+    max-width: 960px;
+}
+
+.settings-help {
+    color: #666;
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+}
+
+.platform-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.platform-tab {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    background: #f0f0f0;
+    color: #333;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background 0.15s;
+}
+
+.platform-tab:hover {
+    background: #e0e0e0;
+}
+
+.platform-tab.active {
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+}
+
+.settings-panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.settings-panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.settings-panel-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.toggle-platform {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.settings-alert {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.add-subject-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.form-group-grow {
+    flex: 1;
+    min-width: 240px;
+}
+
+.subject-value-input {
+    width: 100%;
+}
+
+.btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+}

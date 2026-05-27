@@ -62,7 +62,7 @@
                                 <circle cx="12" cy="12" r="3"></circle>
                                 <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.364 6.364l-4.243-4.243m-4.242 0L5.636 17.364m12.728 0l-4.243-4.243m-4.242 0L5.636 6.636"></path>
                             </svg>
-                            <span>Configuración</span>
+                            <span>Asuntos de Email</span>
                         </a>
                         <a href="/logout" class="user-menu-item" id="logoutMenuItem">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

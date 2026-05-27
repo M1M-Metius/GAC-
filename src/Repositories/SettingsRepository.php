@@ -106,15 +106,156 @@ class SettingsRepository
         
         $settings = $this->getByPattern($pattern);
         
-        // Filtrar solo los que son asuntos (terminan en _1, _2, _3, _4)
+        // Filtrar solo claves de asunto: PLATAFORMA_N (N = número)
         $subjects = [];
         foreach ($settings as $name => $value) {
-            if (preg_match('/^' . preg_quote($platformUpper, '/') . '_(\d+)$/', $name, $matches)) {
+            if (preg_match('/^' . preg_quote($platformUpper, '/') . '_(\d+)$/', $name)) {
                 $subjects[] = $value;
             }
         }
         
         return $subjects;
+    }
+
+    /**
+     * Obtener asuntos con nombre de setting (para administración)
+     *
+     * @return array<int, array{name: string, value: string}>
+     */
+    public function getEmailSubjectsDetailed(string $platform): array
+    {
+        $platformUpper = strtoupper($platform);
+        $pattern = "{$platformUpper}_%";
+        $settings = $this->getByPattern($pattern);
+        $subjects = [];
+
+        foreach ($settings as $name => $value) {
+            if (preg_match('/^' . preg_quote($platformUpper, '/') . '_(\d+)$/', $name, $matches)) {
+                $subjects[(int) $matches[1]] = [
+                    'name' => $name,
+                    'value' => $value,
+                ];
+            }
+        }
+
+        ksort($subjects);
+
+        return array_values($subjects);
+    }
+
+    /**
+     * Generar el siguiente nombre de setting para un asunto (ej. NETFLIX_5)
+     */
+    public function getNextSubjectKey(string $platform): string
+    {
+        $platformUpper = strtoupper($platform);
+        $settings = $this->getByPattern("{$platformUpper}_%");
+        $max = 0;
+
+        foreach (array_keys($settings) as $name) {
+            if (preg_match('/^' . preg_quote($platformUpper, '/') . '_(\d+)$/', $name, $matches)) {
+                $max = max($max, (int) $matches[1]);
+            }
+        }
+
+        return "{$platformUpper}_" . ($max + 1);
+    }
+
+    /**
+     * Guardar o actualizar un setting
+     */
+    public function save(string $name, string $value, string $type = 'string', ?string $description = null): bool
+    {
+        try {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("
+                INSERT INTO settings (name, value, type, description)
+                VALUES (:name, :value, :type, :description)
+                ON DUPLICATE KEY UPDATE
+                    value = VALUES(value),
+                    type = VALUES(type),
+                    description = COALESCE(VALUES(description), description)
+            ");
+
+            $stmt->execute([
+                'name' => $name,
+                'value' => $value,
+                'type' => $type,
+                'description' => $description,
+            ]);
+
+            self::$cache[$name] = $this->castValue($value, $type);
+
+            return true;
+        } catch (PDOException $e) {
+            error_log("Error al guardar setting '{$name}': " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Eliminar un setting por nombre
+     */
+    public function delete(string $name): bool
+    {
+        try {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("DELETE FROM settings WHERE name = :name");
+            $stmt->execute(['name' => $name]);
+            unset(self::$cache[$name]);
+
+            return true;
+        } catch (PDOException $e) {
+            error_log("Error al eliminar setting '{$name}': " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Normalizar texto de asunto para comparación (solo espacios, sin fuzzy)
+     */
+    public static function normalizeSubjectValue(string $value): string
+    {
+        $value = trim($value);
+        $value = preg_replace('/\s+/u', ' ', $value);
+
+        return $value;
+    }
+
+    /**
+     * Buscar asunto con el mismo texto (coincidencia exacta, opcionalmente sin distinguir mayúsculas)
+     *
+     * @return array{name: string, value: string}|null
+     */
+    public function findSubjectByExactValue(string $platform, string $value, ?string $excludeName = null): ?array
+    {
+        $normalized = self::normalizeSubjectValue($value);
+        if ($normalized === '') {
+            return null;
+        }
+
+        foreach ($this->getEmailSubjectsDetailed($platform) as $subject) {
+            if ($excludeName !== null && strcasecmp($subject['name'], $excludeName) === 0) {
+                continue;
+            }
+
+            $existing = self::normalizeSubjectValue((string) $subject['value']);
+            if (strcasecmp($existing, $normalized) === 0) {
+                return $subject;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Verificar que un nombre de setting pertenece a una plataforma
+     */
+    public function isSubjectKeyForPlatform(string $name, string $platform): bool
+    {
+        $platformUpper = strtoupper($platform);
+
+        return (bool) preg_match('/^' . preg_quote($platformUpper, '/') . '_\d+$/', $name);
     }
 
     /**

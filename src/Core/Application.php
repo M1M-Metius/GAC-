@@ -58,6 +58,10 @@ class Application
         $router->get('/admin/codes', 'CodeController@index', ['auth']);
         $router->get('/admin/users', 'UserController@index', ['auth']);
         $router->get('/admin/settings', 'SettingsController@index', ['auth']);
+        $router->post('/admin/settings/subjects', 'SettingsController@storeSubject', ['auth']);
+        $router->post('/admin/settings/subjects/update', 'SettingsController@updateSubject', ['auth']);
+        $router->post('/admin/settings/subjects/delete', 'SettingsController@destroySubject', ['auth']);
+        $router->post('/admin/settings/platform/toggle', 'SettingsController@togglePlatform', ['auth']);
         
         // Rutas Gmail
         $router->get('/gmail/connect', 'GmailController@connect', ['auth']);

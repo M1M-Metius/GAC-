@@ -3,6 +3,7 @@ GAC - Repositorios para Scripts Python
 """
 
 import logging
+import re
 from cron.database import Database
 from mysql.connector import Error
 
@@ -180,10 +181,11 @@ class SettingsRepository:
             results = cursor.fetchall()
             cursor.close()
             
-            # Filtrar solo los que son asuntos (_1, _2, _3, _4)
+            # Filtrar solo claves de asunto: PLATAFORMA_N
+            subject_pattern = re.compile(rf'^{re.escape(platform_upper)}_(\d+)$')
             subjects = []
             for result in results:
-                if result['name'].endswith(('_1', '_2', '_3', '_4')):
+                if subject_pattern.match(result['name']):
                     subjects.append(result['value'])
             
             return subjects
